@@ -1,0 +1,31 @@
+{
+  "name": "shoppingify",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "husky": "^8.0.3",
+    "prettier": "^2.8.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "turbo run lint"
+    }
+  },
+  "packageManager": "pnpm@7.25.0"
+}
