@@ -34,6 +34,8 @@ jobs:
         run: pnpm run lint
       - name: Pull latest changes
         run: pnpm vercel pull --yes --token=${VERCEL_TOKEN}
+      - name: Print Environment Variable
+        run: echo $MY_ENV_VAR
       - name: Build
         run: pnpm vercel build
       - name: Deploy
