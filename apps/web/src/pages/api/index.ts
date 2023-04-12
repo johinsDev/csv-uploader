@@ -1,68 +1,74 @@
 import env from '@/env'
-import Queue from 'bull'
+import { Queue, Worker } from 'bullmq'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-const queue = new Queue('test', env.REDIS_URL!, {
-  defaultJobOptions: {
-    delay: 5000,
-    removeOnComplete: true,
-  },
-  limiter: {
-    max: 1,
-    duration: 5000,
-  },
+const connection = {
+  host: env.REDIS_URL?.split(':')[0] || 'localhost',
+  port: parseInt(env.REDIS_URL?.split(':')[1] || '6379'),
+}
+
+const queue = new Queue('test', {
+  connection,
 })
-
-const JOB_LIMIT = 1
 
 const JOB_DELAY = 1000
 
-queue
-  .isReady()
-  .then(() => {
-    console.info(
-      `[INIT] Report queue is connected to Redis at ${process.env.REDIS_URL}`
-    )
-    console.info(
-      `[INIT] Job process is limited to ${JOB_LIMIT} job with delay ${JOB_DELAY} milliseconds each`
-    )
-  })
-  .catch((error) => {
-    console.error(`[ERROR] Couldn't connect to Redis, got error: ${error}`)
-  })
-
 // Report Queue Event Listeners
-queue.on('waiting', (jobID) => {
-  console.info(`[ADDED] Job added with job ID ${jobID}`)
-})
-queue.on('active', (job) => {
-  console.info(`[STARTED] Job ID ${job.id} has been started`)
-})
-queue.on('completed', (job) => {
-  console.info(`[COMPLETED] Job ID ${job.id} has been completed`)
-})
-queue.on('failed', (job) => {
-  console.error(`[FAILED] Job ID ${job.id} has been failed`)
-})
-queue.on('error', (job) => {
-  console.error(`[ERROR] An error occurred by the queue, got ${job}`)
-})
-queue.on('cleaned', function () {
-  console.info(`[CLEANED] Report queue has been cleaned`)
-})
-queue.on('drained', function () {
-  console.info(`[WAITING] Waiting for jobs...`)
-})
+// queue.on('waiting', (jobID) => {
+//   console.info(`[ADDED] Job added with job ID ${jobID}`)
+// })
+// queue.on('active', (job) => {
+//   console.info(`[STARTED] Job ID ${job.id} has been started`)
+// })
+// queue.on('completed', (job) => {
+//   console.info(`[COMPLETED] Job ID ${job.id} has been completed`)
+// })
+// queue.on('failed', (job) => {
+//   console.error(`[FAILED] Job ID ${job.id} has been failed`)
+// })
+// queue.on('error', (job) => {
+//   console.error(`[ERROR] An error occurred by the queue, got ${job}`)
+// })
+// queue.on('cleaned', function () {
+//   console.info(`[CLEANED] Report queue has been cleaned`)
+// })
+// queue.on('drained', function () {
+//   console.info(`[WAITING] Waiting for jobs...`)
+// })
 
-queue.process(async (job) => {
-  console.info(`[PROCESS] Job ID ${job.id} is being processed`)
-  await new Promise((resolve) => setTimeout(resolve, JOB_DELAY))
-  console.info(`[PROCESS] Job ID ${job.id} has been processed`)
-})
+const worker = new Worker(
+  'test',
+  async (job) => {
+    console.info(
+      `[PROCESS] Job ID ${job.id} is being processed`,
+      JSON.stringify(job)
+    )
 
-import { NextApiRequest, NextApiResponse } from 'next'
+    await new Promise((resolve) => setTimeout(resolve, JOB_DELAY * 10))
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  queue.add({ name: 'John Doe' })
+    console.info(`[PROCESS] Job ID ${job.id} has been processed`)
+  },
+  {
+    connection,
+    concurrency: 13,
+  }
+)
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const name = 'John Doe'
+  queue.add(
+    'test',
+    { name },
+    {
+      parent: {
+        id: '123',
+        queue: 'test',
+      },
+    }
+  )
 
   res.status(200).json({ name: 'John Doe' })
 }
