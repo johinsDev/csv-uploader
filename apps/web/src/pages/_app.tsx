@@ -2,6 +2,7 @@ import { MantineProvider } from '@mantine/core'
 import { AppProps } from 'next/app'
 import Head from 'next/head'
 
+import { RouterTransition } from '@/components/router-transition'
 import { DefaultMantineColor, Tuple } from '@mantine/core'
 
 type ExtendedCustomColors = 'primary' | 'secondary' | DefaultMantineColor
@@ -24,6 +25,7 @@ export default function App(props: AppProps) {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
+      <RouterTransition />
       <Component {...pageProps} />
     </MantineProvider>
   )
