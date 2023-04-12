@@ -13,6 +13,7 @@ const processEnv = {
   DATABASE_URL: process.env.DATABASE_URL,
   GITHUB_ID: process.env.GITHUB_ID,
   GITHUB_SECRET: process.env.GITHUB_SECRET,
+  REDIS_URL: process.env.REDIS_URL,
 } as const
 
 env = new Proxy(processEnv, {
